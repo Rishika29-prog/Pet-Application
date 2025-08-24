@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday ❤️ – Treasure Hunt</title>
+  <style>
+    :root { --primary:#d6336c; --bg1:#fff0f6; --bg2:#fff5e6; --ink:#2b2b2b; --card:#ffffffdd; }
+    * { box-sizing:border-box; }
+    html,body { height:100%; margin:0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color:var(--ink); background:linear-gradient(135deg,var(--bg1),var(--bg2)); overflow-x:hidden; }
+    .wrap { max-width:1100px; margin:0 auto; padding:24px; }
+    .center { display:flex; align-items:center; justify-content:center; text-align:center; }
+    .hidden { display:none !important; }
+
+    .card { background:var(--card); backdrop-filter: blur(6px); border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,.08); padding:24px; }
+    h1 { font-size:clamp(28px,4vw,48px); margin:0 0 12px; color:var(--primary); }
+    h2 { font-size:clamp(20px,3vw,28px); margin:0 0 16px; }
+    p { font-size:18px; line-height:1.5; }
+
+    button { appearance:none; border:0; cursor:pointer; background:var(--primary); color:#fff; font-weight:600; padding:12px 20px; border-radius:12px; font-size:16px; box-shadow:0 6px 16px rgba(214,51,108,.35); transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease; }
+    button:hover { transform: translateY(-1px); box-shadow:0 10px 24px rgba(214,51,108,.45); }
+    button:active { transform: translateY(1px); }
+    .ghost-btn { background:#fff; color:var(--primary); border:2px solid var(--primary); }
+
+    .countdown { font-size:clamp(48px,12vw,120px); font-weight:800; letter-spacing:-2px; color:var(--primary); }
+
+    .stack { display:grid; gap:16px; }
+    .stage { min-height:70vh; display:grid; place-items:center; }
+    .flex-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+
+    /* Balloon pop */
+    .sky { position:relative; width:100%; height:60vh; overflow:hidden; background:linear-gradient(#e0f7ff,#f7fbff); border-radius:16px; }
+    .balloon { --x:0; --d:8s; --size:70px; --hue:340; position:absolute; bottom:-100px; left:var(--x); width:var(--size); height:calc(var(--size)*1.25); background:hsl(var(--hue) 80% 60%); border-radius:50% 50% 45% 45% / 60% 60% 40% 40%; box-shadow:inset -8px -10px 0 rgba(0,0,0,.1); animation: rise var(--d) linear forwards; cursor:pointer; }
+    .balloon:after { content:""; position:absolute; bottom:-14px; left:50%; transform:translateX(-50%); width:2px; height:30px; background:rgba(0,0,0,.15); }
+    @keyframes rise { to { transform: translateY(-85vh); opacity:1; } }
+
+    /* Memory match */
+    .grid { display:grid; gap:10px; grid-template-columns: repeat(4, minmax(70px, 120px)); justify-content:center; }
+    .tile { width:100%; aspect-ratio:1; border-radius:16px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,.08); display:grid; place-items:center; font-size:36px; cursor:pointer; }
+    .tile.revealed { background:#ffe9f1; }
+    .tile.matched { background:#d1fae5; }
+
+    /* Sliding puzzle */
+    .puzzle { width:min(92vw,420px); height:min(92vw,420px); margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:6px; }
+    .piece { position:relative; border-radius:10px; overflow:hidden; background:#fff; cursor:pointer; box-shadow:0 6px 12px rgba(0,0,0,.08); }
+    .piece img { position:absolute; width:300%; height:300%; object-fit:cover; top:0; left:0; user-select:none; pointer-events:none; }
+    .piece.empty { background:repeating-linear-gradient(45deg,#f3f3f3,#f3f3f3 10px,#ffffff 10px,#ffffff 20px); cursor:default; box-shadow:none; }
+
+    /* Slideshow */
+    .slideshow { display:grid; gap:12px; }
+    .slideshow img { max-width:100%; max-height:60vh; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.12); }
+
+    /* Confetti */
+    .confetti { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+    .confetti i{ position:absolute; width:10px; height:16px; background:hsl(var(--h) 90% 60%); top:-20px; left:var(--l); transform:rotate(var(--r)); animation:fall 3.2s ease-in infinite; }
+    @keyframes fall { 70%{ transform: translateY(95vh) rotate(300deg);} 100%{ transform: translateY(110vh) rotate(360deg);} }
+
+    .note { font-size:14px; opacity:.8; }
+    .solution { font-size:16px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Stage 0: Countdown -->
+    <section id="stage-countdown" class="stage">
+      <div class="card center stack">
+        <h1>Countdown to the Surprise 🎉</h1>
+        <div id="countdown" class="countdown">10</div>
+        <p class="note">(Keep watching 👀)</p>
+      </div>
+    </section>
+
+    <!-- Stage 1: Greeting + Start -->
+    <section id="stage-greeting" class="stage hidden">
+      <div class="card stack center">
+        <h1 id="greet-title">Happy Birthday, My Love ❤️</h1>
+        <p>
+          Thank you for poruthufying my paithiyakara thanams and you also made me feel special.
+          For such a person, I want to make you feel very very very special. I swear I'll do my best efforts
+          to make you feel that way everyday. You are my comfort zone. You are my soul mate.
+          Love you more than anything my Gundu Gundaaaa Gundaaa. ❤️oru chinna game poduvoma?🗝️🎁
+        </p>
+        <div class="flex-row">
+          <button id="btn-begin">Begin the Adventure</button>
+          <button class="ghost-btn" id="btn-skip-intro">Skip → Slideshow</button>
+        </div>
+        <p class="note">(Music will start after you click. No autoplay 🙂)</p>
+      </div>
+    </section>
+
+    <!-- Stage 2: Games -->
+    <section id="stage-games" class="stage hidden">
+      <div class="stack" style="width:100%">
+        <div class="card center stack">
+          <h2>Level <span id="level-num">1</span> / 5</h2>
+          <p id="level-title"><strong>Game 1:</strong> Solve the photo puzzle to reveal your first gift clue.</p>
+          <div class="flex-row"><button id="btn-skip" class="ghost-btn">Skip this game & show solution ⏭️</button></div>
+        </div>
+
+        <!-- Game containers -->
+        <div id="game-puzzle" class="card">
+          <div class="puzzle" id="puzzle"></div>
+          <p class="note">Arrange pieces to form the photo. Click a tile next to the empty spot to slide.</p>
+          <div id="solution-puzzle" class="solution hidden"></div>
+        </div>
+
+        <div id="game-quiz" class="card hidden">
+          <h3>Us Trivia 💑</h3>
+          <p id="quiz-q">Question text</p>
+          <div id="quiz-opts" class="stack"></div>
+          <div id="solution-quiz" class="solution hidden"></div>
+        </div>
+
+        <div id="game-balloons" class="card hidden">
+          <h3>Pop a Balloon 🎈</h3>
+          <p>One of these balloons hides your clue. Pop until you find it!</p>
+          <div class="sky" id="sky"></div>
+          <div id="solution-balloons" class="solution hidden"></div>
+        </div>
+
+        <div id="game-memory" class="card hidden">
+          <h3>Memory Match 🧠</h3>
+          <div class="grid" id="memory-grid"></div>
+          <div id="solution-memory" class="solution hidden"></div>
+        </div>
+
+        <div id="game-song" class="card hidden center stack">
+          <h3>Finale 🎵</h3>
+          <p>Hit play to start the song and your slideshow of memories.</p>
+          <div class="flex-row"><button id="btn-play">Play</button></div>
+          <div id="solution-song" class="solution hidden"></div>
+        </div>
+
+        <div id="clue" class="card hidden"></div>
+        <div class="flex-row">
+          <button id="btn-next" class="hidden">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage 3: Slideshow Finale -->
+    <section id="stage-slideshow" class="stage hidden">
+      <div class="card slideshow center">
+        <h2>Our Memories Together 💖</h2>
+        <img id="slide" src="" alt="Our photo"/>
+        <div class="flex-row">
+          <button id="btn-prev">⟵ Prev</button>
+          <button id="btn-pause">Pause</button>
+          <button id="btn-next-slide">Next ⟶</button>
+        </div>
+        <p class="note">Tip: Add your photos in <code>photos/</code> and a song in <code>music/song.mp3</code>.</p>
+      </div>
+    </section>
+  </div>
+
+  <audio id="bgm" src="music/song.mp3" preload="auto"></audio>
+  <div id="confetti" class="confetti"></div>
+
+  <script>
+    /******************** CONFIG ********************/
+    const HUSBAND_NAME = "Ramu"; // personalized
+
+    // Puzzle image & slideshow photos
+    const PUZZLE_IMAGE = "photos/puzzle.jpg"; // 1200x1200 recommended
+    const SLIDES = [
+      "photos/photo1.jpg",
+      "photos/photo2.jpg",
+      "photos/photo3.jpg",
+      "photos/photo4.jpg",
+      "photos/photo5.jpg"
+    ];
+
+    // Five clues for five gifts
+    const GIFT_CLUES = [
+      "🎁 Gift #1 is waiting under the sofa!",
+      "🎁 Gift #2 is chilling inside the fridge.",
+      "🎁 Gift #3 hides where you keep your laptop.",
+      "🎁 Gift #4 is inside the TV wardrobe, right drawer.",
+      "🎁 Gift #5: Check the kitchen rack with glass window."
+    ];
+
+    // Trivia questions
+    const QUIZ = [
+      { q: "Our first trip together was to…", options:["Goa","Ooty","Jaipur","Mysuru"], answer:0 },
+      { q: "Your specialty that I love the most is…", options:["Pasta","Biryani","Maggi","Tea"], answer:3 },
+      { q: "Our movie date I can rewatch any day…", options:["3 Idiots","Barfi!","Tamasha","Jab We Met"], answer:1 }
+    ];
+
+    // Memory match symbols (pairs)
+    const MEM_EMOJIS = ["💘","💘","🎈","🎈","🍰","🍰","📸","📸","🌟","🌟","🎁","🎁"]; // 6 pairs
+
+    /******************** UTILITIES ********************/
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+    function celebrate(){ const box = $("#confetti"); box.innerHTML=""; const n=120; for(let i=0;i<n;i++){ const piece=document.createElement('i'); piece.style.setProperty('--l', Math.random()*100+'%'); piece.style.setProperty('--r', (Math.random()*360)+'deg'); piece.style.setProperty('--h', Math.floor(Math.random()*360)); piece.style.animationDelay=(Math.random()*1.2)+'s'; box.appendChild(piece);} setTimeout(()=> box.innerHTML="", 4000); }
+
+    /******************** FLOW – Stages ********************/
+    const stageCountdown = $("#stage-countdown");
+    const stageGreeting  = $("#stage-greeting");
+    const stageGames     = $("#stage-games");
+    const stageShow      = $("#stage-slideshow");
+
+    const levelNum   = $("#level-num");
+    const levelTitle = $("#level-title");
+    const clueBox    = $("#clue");
+    const btnNext    = $("#btn-next");
+    const btnSkip    = $("#btn-skip");
+    const bgm        = $("#bgm");
+
+    // Personalize greeting
+    $("#greet-title").textContent = `🎉 Happy Birthday ${HUSBAND_NAME}! ❤️`;
+
+    // Countdown
+    let counter=10; const countdownEl = $("#countdown");
+    const cInterval = setInterval(()=>{ counter--; countdownEl.textContent = counter; if(counter<=0){ clearInterval(cInterval); showGreeting(); celebrate(); } },1000);
+
+    function showGreeting(){ stageCountdown.classList.add('hidden'); stageGreeting.classList.remove('hidden'); }
+
+    $("#btn-begin").addEventListener('click', async ()=>{ stageGreeting.classList.add('hidden'); stageGames.classList.remove('hidden'); try{ await bgm.play(); }catch(e){} startLevel(0); });
+    $("#btn-skip-intro").addEventListener('click', ()=>{ showSlideshow(); });
+
+    let currentLevel = 0;
+    let currentQuiz = null; // store selected quiz for solution
+    let secretBalloonIdx = null; // store winning balloon index for solution
+
+    function startLevel(i){
+      currentLevel = i;
+      levelNum.textContent = i+1;
+      clueBox.classList.add('hidden'); btnNext.classList.add('hidden');
+      $$('#game-puzzle, #game-quiz, #game-balloons, #game-memory, #game-song').forEach(el=>el.classList.add('hidden'));
+      $$('#solution-puzzle, #solution-quiz, #solution-balloons, #solution-memory, #solution-song').forEach(el=>el.classList.add('hidden'));
+      btnSkip.classList.remove('hidden');
+
+      const titles = [
+        "Game 1: Solve the photo puzzle to reveal your first gift clue.",
+        "Game 2: A tiny trivia about us 💑",
+        "Game 3: Pop the balloon hiding your clue 🎈",
+        "Game 4: Match the pairs to unlock the next hint",
+        "Finale: Hit play to start the music & slideshow"
+      ];
+      levelTitle.innerHTML = `<strong>${titles[i]}</strong>`;
+
+      switch(i){
+        case 0: initPuzzle(); $("#game-puzzle").classList.remove('hidden'); break;
+        case 1: initQuiz(); $("#game-quiz").classList.remove('hidden'); break;
+        case 2: initBalloons(); $("#game-balloons").classList.remove('hidden'); break;
+        case 3: initMemory(); $("#game-memory").classList.remove('hidden'); break;
+        case 4: initSongFinale(); $("#game-song").classList.remove('hidden'); break;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    btnNext.addEventListener('click', ()=>{ if(currentLevel < 4) startLevel(currentLevel+1); else showSlideshow(); });
+
+    btnSkip.addEventListener('click', ()=>{ skipLevel(); });
+
+    function revealClue(i){
+      clueBox.classList.remove('hidden');
+      clueBox.innerHTML = `<h3>Clue unlocked!</h3><p>${GIFT_CLUES[i]}</p>`;
+      celebrate();
+      btnNext.classList.remove('hidden');
+      btnSkip.classList.add('hidden');
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function showSolution(el, text){ const box=$(el); box.textContent = text; box.classList.remove('hidden'); }
+
+    /******************** GAME 1 – Sliding Puzzle ********************/
+    let puzzleState = []; // 0..8 (0 empty)
+    function initPuzzle(){
+      const total = 9;
+      do { puzzleState = shuffle([...Array(total).keys()]); } while(!isSolvable(puzzleState));
+      renderPuzzle();
+    }
+    function isSolvable(arr){ let inv=0; for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) if(arr[i]&&arr[j]&&arr[i]>arr[j]) inv++; return inv%2===0; }
+    function renderPuzzle(){
+      const container = $("#puzzle"); container.innerHTML="";
+      puzzleState.forEach((val, idx)=>{
+        const piece = document.createElement('div'); piece.className='piece'+(val===0?' empty':'');
+        if(val!==0){ const img=document.createElement('img'); img.src=PUZZLE_IMAGE; const rr=Math.floor(val/3), cc=val%3; img.style.left=`-${cc*100}%`; img.style.top=`-${rr*100}%`; piece.appendChild(img); }
+        piece.addEventListener('click', ()=>movePiece(idx));
+        container.appendChild(piece);
+      });
+    }
+    function movePiece(idx){ const emptyIdx=puzzleState.indexOf(0); const canMove=[idx-3,idx+3,idx-1,idx+1].includes(emptyIdx) && !(idx%3===0 && emptyIdx===idx-1) && !(idx%3===2 && emptyIdx===idx+1); if(!canMove) return; [puzzleState[idx],puzzleState[emptyIdx]]=[puzzleState[emptyIdx],puzzleState[idx]]; renderPuzzle(); if(isSolved()) { showSolution('#solution-puzzle','Solved! 🧩'); revealClue(0); } }
+    function isSolved(){ for(let i=0;i<puzzleState.length;i++) if(puzzleState[i]!==i) return false; return true; }
+
+    /******************** GAME 2 – Quiz ********************/
+    function initQuiz(){ const q = QUIZ[Math.floor(Math.random()*QUIZ.length)]; currentQuiz = q; $("#quiz-q").textContent=q.q; const opts=$("#quiz-opts"); opts.innerHTML=""; q.options.forEach((opt,i)=>{ const b=document.createElement('button'); b.textContent=opt; b.className='ghost-btn'; b.addEventListener('click',()=>{ if(i===q.answer){ b.textContent='✓ '+opt+' — Correct!'; showSolution('#solution-quiz', 'Solution: '+opt); revealClue(1);} else { b.textContent='✗ Try again 😘'; } }); opts.appendChild(b); }); }
+
+    /******************** GAME 3 – Balloon Pop ********************/
+    let skyEl=null;
+    function initBalloons(){ const sky=$("#sky"); skyEl=sky; sky.innerHTML=""; const total=12; secretBalloonIdx=Math.floor(Math.random()*total); for(let i=0;i<total;i++){ const div=document.createElement('div'); div.className='balloon'; div.style.setProperty('--x',(5+Math.random()*90)+'%'); div.style.setProperty('--d',(6+Math.random()*6)+'s'); div.style.setProperty('--size',(60+Math.random()*50)+'px'); div.style.setProperty('--hue', Math.floor(Math.random()*360)); div.title='Pop!'; div.addEventListener('click', ()=>{ div.style.opacity=.2; div.style.pointerEvents='none'; if(i===secretBalloonIdx){ showSolution('#solution-balloons','You found it! 🎈'); revealClue(2); } }); sky.appendChild(div); } }
+
+    /******************** GAME 4 – Memory Match ********************/
+    function initMemory(){ const grid=$("#memory-grid"); grid.innerHTML=""; const items=shuffle([...MEM_EMOJIS]); let first=null, lock=false, matched=0; items.forEach((emoji,idx)=>{ const tile=document.createElement('button'); tile.className='tile'; tile.dataset.emoji=emoji; tile.addEventListener('click', ()=>{ if(lock||tile.classList.contains('matched')||tile.classList.contains('revealed')) return; tile.classList.add('revealed'); tile.textContent=emoji; if(!first){ first={tile,emoji}; return; } if(first.emoji===emoji){ tile.classList.add('matched'); first.tile.classList.add('matched'); matched+=2; first=null; celebrate(); if(matched===items.length){ showSolution('#solution-memory','All pairs matched!'); revealClue(3);} } else { lock=true; setTimeout(()=>{ tile.classList.remove('revealed'); tile.textContent=""; first.tile.classList.remove('revealed'); first.tile.textContent=""; first=null; lock=false; },650); } }); grid.appendChild(tile); }); }
+
+    /******************** GAME 5 – Song & Slideshow trigger ********************/
+    function initSongFinale(){ $("#btn-play").onclick = async ()=>{ try{ await bgm.play(); }catch(e){} showSolution('#solution-song','Playing song 🎵'); revealClue(4); }; }
+
+    /******************** SKIP LOGIC ********************/
+    function skipLevel(){
+      switch(currentLevel){
+        case 0: // puzzle → set solved state
+          puzzleState = [...Array(9).keys()]; renderPuzzle(); showSolution('#solution-puzzle','Solution shown: Completed image 🧩'); revealClue(0); break;
+        case 1: // quiz → show correct answer
+          if(currentQuiz){ const ans = currentQuiz.options[currentQuiz.answer]; showSolution('#solution-quiz', 'Solution: '+ans); } revealClue(1); break;
+        case 2: // balloons → highlight winning balloon
+          if(skyEl && typeof secretBalloonIdx==='number'){ const b = skyEl.children[secretBalloonIdx]; if(b){ b.style.outline='4px solid gold'; b.style.opacity = 1; } }
+          showSolution('#solution-balloons','Solution: highlighted the winning balloon ⭐'); revealClue(2); break;
+        case 3: // memory → reveal all
+          $$('#memory-grid .tile').forEach(t=>{ t.classList.add('revealed','matched'); t.textContent = t.dataset.emoji || '❤'; });
+          showSolution('#solution-memory','Solution: revealed all pairs 🧠'); revealClue(3); break;
+        case 4: // song → play
+          try{ bgm.play(); }catch(e){}
+          showSolution('#solution-song','Playing song 🎵'); revealClue(4); break;
+      }
+    }
+
+    /******************** SLIDESHOW ********************/
+    let slideIdx=0, slideTimer=null, playing=true;
+    function showSlideshow(){ stageGames.classList.add('hidden'); stageGreeting.classList.add('hidden'); stageShow.classList.remove('hidden'); loadSlide(0); autoPlay(); }
+    function loadSlide(i){ slideIdx=(i+SLIDES.length)%SLIDES.length; $("#slide").src=SLIDES[slideIdx]; }
+    function autoPlay(){ playing=true; $("#btn-pause").textContent='Pause'; slideTimer && clearInterval(slideTimer); slideTimer=setInterval(()=> loadSlide(slideIdx+1), 4000); }
+    $("#btn-prev").addEventListener('click', ()=> loadSlide(slideIdx-1));
+    $("#btn-next-slide").addEventListener('click', ()=> loadSlide(slideIdx+1));
+    $("#btn-pause").addEventListener('click', ()=>{ if(playing){ clearInterval(slideTimer); playing=false; $("#btn-pause").textContent='Play'; } else { autoPlay(); } });
+  </script>
+</body>
+</html>
